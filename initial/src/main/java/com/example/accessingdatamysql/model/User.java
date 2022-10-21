@@ -1,9 +1,7 @@
 package com.example.accessingdatamysql.model;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
+import java.util.List;
 
 @Entity // This tells Hibernate to make a table out of this class
 public class User {
@@ -16,6 +14,9 @@ public class User {
     private String email;
 
     private Integer balance;
+
+    @OneToMany(mappedBy = "owner")
+    private List<Book> books;
 
     public Integer getBalance() {
         return balance;

@@ -44,6 +44,10 @@ public class MainController {
         b.setAuthor(author);
         b.setPrice(price);
         b.setEdition(edition);
+        User library = new User(); // user is an entity figure out how to map an entry in book to a row in user
+        library.setName("Library");
+        b.setOwner(library);
+        userRepository.save(library);
         bookRepository.save(b);
         return "Saved";
     }
