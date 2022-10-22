@@ -25,11 +25,11 @@ public class Book {
 
     private String title;
 
-    private Integer price;
+    private Double price;
 
     private Edition edition;
 
-    private boolean isAvailable;
+    private Boolean isAvailable;
 
     //give the book an owner? could either be a user or the library
     @ManyToOne
@@ -60,11 +60,11 @@ public class Book {
         this.title = title;
     }
 
-    public Integer getPrice() {
+    public Double getPrice() {
         return price;
     }
 
-    public void setPrice(Integer price) {
+    public void setPrice(Double price) {
         this.price = price;
     }
 

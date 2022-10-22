@@ -22,6 +22,8 @@ public class MainController {
     @Autowired
     private BookRepository bookRepository;
 
+    private Double DISCOUNT = 0.9; // 10% discount
+
     @PostMapping(path="/add") // Map ONLY POST Requests
     public @ResponseBody String addNewUser (@RequestParam String name
             , @RequestParam String email) {
@@ -38,18 +40,94 @@ public class MainController {
 
     @PostMapping(path="/addBook")
     public @ResponseBody String addNewBook(@RequestParam String title, @RequestParam String author,
-                                           @RequestParam Integer price, @RequestParam Book.Edition edition){
+                                           @RequestParam Double price, @RequestParam Book.Edition edition,
+                                           @RequestParam Integer ownerID){
         Book b = new Book();
         b.setTitle(title);
         b.setAuthor(author);
         b.setPrice(price);
         b.setEdition(edition);
-        User library = new User(); // user is an entity figure out how to map an entry in book to a row in user
-        library.setName("Library");
-        b.setOwner(library);
-        userRepository.save(library);
+
+        User owner = userRepository.findById(ownerID).get(); //get the user with the given id
+        if(owner.getName().equalsIgnoreCase("Library")){
+            b.setAvailable(true);
+        }
+        else{
+            b.setAvailable(false);
+        }
+        b.setOwner(owner); //set the owner of the book to the user with the given id
         bookRepository.save(b);
         return "Saved";
+    }
+
+    @PostMapping(path="/sellExistingBook")
+    public @ResponseBody String sellBook(@RequestParam Integer id){
+        try {
+            Book b = bookRepository.findById(id).get();
+            if(b.isAvailable()){
+                return "Book is already in the system........ stop trying to sell counterfits :(\n";
+            }
+            else{
+                b.setOwner(userRepository.findById(1).get()); //set the owner of the book to the library
+                b.setAvailable(true);
+                Double newPrice = b.getPrice() * DISCOUNT;
+                b.setPrice(newPrice);
+                bookRepository.save(b);
+                return "Book Sold for a price of: $" + b.getPrice() + "!";
+            }
+        }
+        catch(Exception e){
+            return "Book not in system";
+        }
+
+    }
+
+    @PostMapping(path="/sellNewBook")
+    public @ResponseBody String sellBook(@RequestParam String title, @RequestParam String author,
+                                         @RequestParam Double price, @RequestParam Book.Edition edition){
+        try {
+            Book b = new Book();
+            b.setTitle(title);
+            b.setAuthor(author);
+            b.setPrice(price  * DISCOUNT); //apply discount at each transaction
+            b.setEdition(edition);
+            b.setOwner(userRepository.findById(1).get()); //set the owner of the book to the library
+            b.setAvailable(true);
+            bookRepository.save(b);
+            return "Book Sold for a price of: $" + price * DISCOUNT + "!";
+        }
+        catch (Exception e){
+            return "Failed to sell book";
+        }
+    }
+
+    @PostMapping(path="/buyBook")
+    public @ResponseBody String buyBook(@RequestParam Integer id, @RequestParam Integer userID){
+        try{
+            User u = userRepository.findById(userID).get();
+        }
+        catch (Exception e){
+            return "User not in system, please add user before buying book";
+        }
+
+        try {
+            Book b = bookRepository.findById(id).get();
+
+            if(b.isAvailable()) { //TODO: update the book in library after selling it
+                b.setAvailable(false);
+                b.setPrice(b.getPrice() * DISCOUNT); //apply discount at EACH TRANSACTION
+                b.setOwner(userRepository.findById(userID).get());
+                bookRepository.save(b);
+                return "Book successfully purchased for: $" + b.getPrice();
+
+            }
+            else{
+                return "Book is not available for purchase at this time.......";
+            }
+        }
+        catch(Exception e){
+            return "Error buying book.....";
+        }
     }
 
 
@@ -58,9 +136,10 @@ public class MainController {
         return bookRepository.findAll();
     }
 
-    @GetMapping(path="/all")
+
+
+    @GetMapping(path="/allUsers")
     public @ResponseBody Iterable<User> getAllUsers() {
-        // This returns a JSON or XML with the users
         return userRepository.findAll();
     }
 }
