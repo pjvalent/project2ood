@@ -31,9 +31,10 @@ public class Book {
 
     private Boolean isAvailable;
 
-    //give the book an owner? could either be a user or the library
+    private int isbn;
+
     @ManyToOne
-    private User owner; //perhaps link this to the user table?
+    private User owner;
 
 
     public Integer getRfid() {
@@ -90,5 +91,21 @@ public class Book {
 
     public void setOwner(User owner) {
         this.owner = owner;
+    }
+
+    public Boolean getAvailable() {
+        return isAvailable;
+    }
+
+    public void setAvailable(Boolean available) {
+        isAvailable = available;
+    }
+
+    public int getIsbn() {
+        return isbn;
+    }
+
+    public void setIsbn(int isbn) {
+        this.isbn = isbn;
     }
 }

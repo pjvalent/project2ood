@@ -6,4 +6,5 @@ import com.example.accessingdatamysql.model.Book;
 
 public interface BookRepository extends CrudRepository<Book, Integer> {
 
+    Book findByIsbn(Integer isbn);
 }
