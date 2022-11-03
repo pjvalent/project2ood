@@ -3,11 +3,14 @@ package com.example.accessingdatamysql;
 import com.example.accessingdatamysql.model.Book;
 import com.example.accessingdatamysql.model.User;
 
+import org.hibernate.query.criteria.internal.expression.function.AggregationFunction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.sql.Date;
+import java.time.LocalDate;
+import java.time.temporal.ChronoField;
 
 @Service
 public class BookService {
@@ -21,6 +24,12 @@ public class BookService {
 
     static final private  Double DISCOUNT = 0.9;
 
+    static final private Double TIME_WEIGHT = 0.5; //weight for the time
+
+    static final private Double NUM_SOLD_WEIGHT = 0.5; //weight for the number of transactions
+
+    static final private Double MAX_DISCOUNT = 90.0; //max discount
+
     public String addBook(@RequestParam String title, @RequestParam String author,
                            @RequestParam Double price, @RequestParam Book.Edition edition,
                            @RequestParam Integer ownerID, @RequestParam Integer isbn) {
@@ -30,9 +39,13 @@ public class BookService {
         b.setPrice(price);
         b.setEdition(edition);
         b.setIsbn(isbn);
+        b.setNumTimesSold(0); //new book gets 0 times sold
 
         Date date = new Date(System.currentTimeMillis());
         b.setDateAdded(date);
+
+        double discount = applyDiscount(price, date, 1);
+
 
 
 
@@ -133,8 +146,34 @@ public class BookService {
         }
     }
 
-    private Double applyDiscount(Double price, Date date){
-        // discount based on number of times sold and how old the book is
-        return 0.0;
+    private Double applyDiscount(Double price, Date date, int numTimesSold){
+
+        Date currentDate = new Date(System.currentTimeMillis()); // discount form current date to date added
+
+        assert(date.compareTo(currentDate) <= 0); //date added must be before or equal to current date
+
+        long diff = currentDate.getTime() - date.getTime(); // difference in milliseconds
+
+        long diffDays = diff / (24 * 60 * 60 * 1000); // difference in days
+
+        // discount based on time and number of times sold
+        // 365 and 100 are arbitrary numbers change as desired, or don't
+        Double discount = ((TIME_WEIGHT * (diffDays/365.0)) + (NUM_SOLD_WEIGHT * (numTimesSold/100.0))) * 100;
+
+        System.out.println("Discount: " + discount);
+
+        if(discount > MAX_DISCOUNT){
+            discount = MAX_DISCOUNT;
+        }
+        else if(discount < 0){
+            discount = 0.0; // something's fucked up if it's less than 0, make sure to try-catch this code at some point
+        } else if (discount.isNaN()) {
+            discount = 0.0; // ignore NAN for now, fix this with try-catch later
+        }
+
+        return discount;
+
     }
+
+
 }

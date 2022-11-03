@@ -120,4 +120,12 @@ public class Book {
     public void setDateAdded(Date dateAdded) {
         this.dateAdded = dateAdded;
     }
+
+    public int getNumTimesSold() {
+        return numTimesSold;
+    }
+
+    public void setNumTimesSold(int numTimesSold) {
+        this.numTimesSold = numTimesSold;
+    }
 }
