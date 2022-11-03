@@ -3,14 +3,12 @@ package com.example.accessingdatamysql;
 import com.example.accessingdatamysql.model.Book;
 import com.example.accessingdatamysql.model.User;
 
-import org.hibernate.query.criteria.internal.expression.function.AggregationFunction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.sql.Date;
-import java.time.LocalDate;
-import java.time.temporal.ChronoField;
+
 
 @Service
 public class BookService {
@@ -47,8 +45,6 @@ public class BookService {
         double discount = applyDiscount(price, date, 1);
 
 
-
-
         User owner = userRepository.findById(ownerID).get(); //get the user with the given id
         if (owner.getName().equalsIgnoreCase("Library")) {
             b.setAvailable(true);
@@ -68,10 +64,12 @@ public class BookService {
             } else {
                 b.setOwner(userRepository.findById(1).get()); //set the owner of the book to the library
                 b.setAvailable(true);
-                Double newPrice = b.getPrice() * DISCOUNT;
+                Double newPrice = applyDiscount(b.getPrice(), b.getDateAdded(), b.getNumTimesSold());
+//                Double newPrice = b.getPrice() * discount;
                 b.setPrice(newPrice);
+                b.setNumTimesSold(b.getNumTimesSold() + 1);
                 bookRepository.save(b);
-                return "Book Sold for a price of: $" + b.getPrice() + "!";
+                return "Book Sold for a price of: $" + newPrice + "!";
             }
         } catch (Exception e) {
             return "Book not in system";
@@ -90,7 +88,8 @@ public class BookService {
             b.setOwner(userRepository.findById(1).get()); //set the owner of the book to the library
             b.setAvailable(true);
             b.setIsbn(isbn);
-            b.setPrice(price);
+            b.setNumTimesSold(1); //new book gets sold 1 time to start
+            b.setPrice(price); //don't discount new books
             bookRepository.save(b);
             return "Book Sold for a price of: $" + price + "!\n";
         }
@@ -107,10 +106,11 @@ public class BookService {
             } else {
                 b.setOwner(userRepository.findById(1).get()); //set the owner of the book to the library
                 b.setAvailable(true);
-                Double newPrice = b.getPrice() * DISCOUNT;
+                b.setNumTimesSold(b.getNumTimesSold() + 1); // increment number of times sold
+                Double newPrice = applyDiscount(b.getPrice(), b.getDateAdded(), b.getNumTimesSold());
                 b.setPrice(newPrice);
                 bookRepository.save(b);
-                return "Book Sold for a price of: $" + b.getPrice() + "!";
+                return "Book Sold for a price of: $" + newPrice + "!";
             }
         } catch (Exception e) {
             return "Book not in system";
@@ -131,7 +131,9 @@ public class BookService {
 
             if(b.isAvailable()) {
                 b.setAvailable(false);
-                b.setPrice(b.getPrice() * DISCOUNT); //apply discount at EACH TRANSACTION
+                Double newPrice = applyDiscount(b.getPrice(), b.getDateAdded(), b.getNumTimesSold());
+                b.setPrice(newPrice);
+                b.setNumTimesSold(b.getNumTimesSold() + 1); // increment number of times sold
                 b.setOwner(userRepository.findById(userID).get());
                 bookRepository.save(b);
                 return "Book successfully purchased for: $" + b.getPrice();
@@ -171,7 +173,11 @@ public class BookService {
             discount = 0.0; // ignore NAN for now, fix this with try-catch later
         }
 
-        return discount;
+        // apply the discount to the original price
+
+        Double newPrice = price * (1 - (discount/100.0));
+
+        return newPrice;
 
     }
 

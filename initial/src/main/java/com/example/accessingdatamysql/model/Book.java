@@ -5,6 +5,7 @@ import java.sql.Date;
 
 
 @Entity
+@Table(uniqueConstraints = {@UniqueConstraint(columnNames = {"isbn"})})
 public class Book {
 
     public enum Edition{
