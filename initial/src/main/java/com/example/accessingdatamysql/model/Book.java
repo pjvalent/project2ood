@@ -1,13 +1,13 @@
 package com.example.accessingdatamysql.model;
 
 import javax.persistence.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.sql.Date;
+
 
 @Entity
 public class Book {
 
-    public enum Edition{ // maps to (0 - n-1) in database where n is number of enum values
+    public enum Edition{
         FIRST,
         ANNIVERSARY,
         COLLECTOR,
@@ -35,6 +35,10 @@ public class Book {
 
     @ManyToOne
     private User owner;
+
+    private Date dateAdded; //date added, no time included
+
+    private int numTimesSold;
 
 
     public Integer getRfid() {
@@ -107,5 +111,13 @@ public class Book {
 
     public void setIsbn(int isbn) {
         this.isbn = isbn;
+    }
+
+    public Date getDateAdded() {
+        return dateAdded;
+    }
+
+    public void setDateAdded(Date dateAdded) {
+        this.dateAdded = dateAdded;
     }
 }

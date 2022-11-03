@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.sql.Date;
+
 @Service
 public class BookService {
 
@@ -29,6 +31,11 @@ public class BookService {
         b.setEdition(edition);
         b.setIsbn(isbn);
 
+        Date date = new Date(System.currentTimeMillis());
+        b.setDateAdded(date);
+
+
+
         User owner = userRepository.findById(ownerID).get(); //get the user with the given id
         if (owner.getName().equalsIgnoreCase("Library")) {
             b.setAvailable(true);
@@ -44,7 +51,7 @@ public class BookService {
         try {
             Book b = bookRepository.findById(id).get();
             if (b.isAvailable()) {
-                return "Book is already in the system........ stop trying to sell counterfits :(\n";
+                return "Book is already in the system...\n";
             } else {
                 b.setOwner(userRepository.findById(1).get()); //set the owner of the book to the library
                 b.setAvailable(true);
@@ -70,8 +77,9 @@ public class BookService {
             b.setOwner(userRepository.findById(1).get()); //set the owner of the book to the library
             b.setAvailable(true);
             b.setIsbn(isbn);
+            b.setPrice(price);
             bookRepository.save(b);
-            return "Book Sold for a price of: $" + price * DISCOUNT + "!";
+            return "Book Sold for a price of: $" + price + "!\n";
         }
         catch (Exception e){
             return "Failed to sell book";
@@ -82,7 +90,7 @@ public class BookService {
         try {
             Book b = bookRepository.findByIsbn(isbn);
             if (b.isAvailable()) {
-                return "Book is already in the system........ stop trying to sell counterfits :(\n";
+                return "Book is already in the system...\n";
             } else {
                 b.setOwner(userRepository.findById(1).get()); //set the owner of the book to the library
                 b.setAvailable(true);
@@ -108,7 +116,7 @@ public class BookService {
         try {
             Book b = bookRepository.findById(id).get();
 
-            if(b.isAvailable()) { //TODO: update the book in library after selling it
+            if(b.isAvailable()) {
                 b.setAvailable(false);
                 b.setPrice(b.getPrice() * DISCOUNT); //apply discount at EACH TRANSACTION
                 b.setOwner(userRepository.findById(userID).get());
@@ -123,5 +131,10 @@ public class BookService {
         catch(Exception e){
             return "Error buying book.....";
         }
+    }
+
+    private Double applyDiscount(Double price, Date date){
+        // discount based on number of times sold and how old the book is
+        return 0.0;
     }
 }
